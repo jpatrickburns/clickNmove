@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Click and Move</title>
+<style type="text/css">
+*{ 
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+#myScreen{
+  background: hsl(150,50%,80%);
+  width:100vw;
+  height:80vh;
+  position:relative;
+  overflow:hidden;
+}
+#myCanvas{
+  width:2000px;
+  height:2000px;
+  position:absolute;
+  top:0;
+ 
+}
+#hint{
+  position: absolute;
+  top:50%;
+  left:30%;
+  text-align:center;
+  font-size:2em;
+  color: hsl(150,20%,50%);
+  transition:all 1s;
+}
+#ball{
+  width:5vw;
+  height:5vw;
+  background:red;
+  border-radius:50%;
+ transform-origin: center, center;
+ position:absolute;
+}
+form{
+  width:100%;
+  height:20vh;
+  background:grey;
+  padding:1% 2%;
+  font-family:Helvetica,serif;
+}
+input{
+  font-size:1em;
+}
+[type="button"]{
+  padding: .5% 2%;
+  margin:0 2% 1% 0;
+  border:none;
+  border-radius:30px;
+}
+select{
+  margin-left:1%;
+}
+#duration{
+  width:2em;
+  margin:0 1%;
+}
+
+/* input[type="checkbox"] +label{
+  height:2em;
+} */
+
+#myText{
+ width:100%;
+ font-family: Courier, monospace;
+ background:white;
+ height:60%;
+  overflow:scroll;
+}
+</style>
+
+</head>
+<body>
+
+  <main>
+ 
+    <div id="myScreen">
+       <p id="hint">(click on screen to place animation points)</p>
+      <div id="ball"></div>
+      <canvas id="myCanvas" width="2000" height="2000"></canvas>
+    </div>
+
+    <form id="myForm">
+      <input type="button" class="myButton" value="Clear" id="clearIt">
+      <input type="button" value="Make Animation" id="doIt">
+     <label for "duration">Duration</label> <input type="number" value=5 id="duration"/>
+      
+<input type="checkbox" id="alt">
+      <label for="alt">Alternate</label>
+ <select id="eases">
+      <option>linear</option>
+   <option>ease</option>
+   <option>ease-in</option>
+   <option>ease-out</option>
+   <option>ease-in-out</option>
+      </select>
+      <div id="myText">
+      </div>
+    </form>
+  </main>
+<script>	
+	//add variables
+var
+  screen = document.getElementById("myScreen"),
+  canvas = document.getElementById("myCanvas"),
+  ctx = canvas.getContext("2d"),
+  points = [],
+  myAnimation = "",
+  myBall = document.getElementById("ball"),
+  ss = document.styleSheets[0],
+  myText = document.getElementById("myText"),
+  makeAnimButton = document.getElementById("doIt"),
+  clearButton = document.getElementById("clearIt"),
+  hintType = document.getElementById("hint"),
+  myEase = document.getElementById("eases");
+
+clearButton.disabled = true,
+
+  // add listeners
+  screen.addEventListener("click", function(e) {
+    points.push(e.offsetX, e.offsetY);
+    myText.innerHTML += points + "<br>";
+    myText.innerHTML += "There are " + points.length / 2 + " points.<br>";
+    hintType.style.opacity = 0;
+    drawPath(e.offsetX, e.offsetY);
+  });
+
+//this one is for the clear button
+clearButton.addEventListener("click", clear);
+
+//This listener makes the animation
+makeAnimButton.addEventListener("click", makeAnim);
+
+// This one draws the path
+function drawPath(x, y) {
+  // alert("in drawPath.");
+
+  ctx.beginPath();
+  ctx.arc(x, y, 10, 0, 2 * Math.PI);
+  ctx.stroke();
+}
+// function to clear all values to normal
+
+function clear() {
+  points = [];
+  myText.innerHTML = "";
+  myAnimation = "";
+  ss.deleteRule(0);
+  myBall.style.animation = "";
+  myText.innerHTML = "There are " + points.length / 2 + " points.";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  makeAnimButton.disabled = false;
+  clearButton.disabled = true;
+  hintType.style.opacity = 1;
+}
+
+function makeAnim() {
+  var step = 100 / ((points.length / 2) - 1);
+  var percent = 0;
+
+  //offset the ball's position to center it
+  var offsetX = myBall.offsetWidth / 2,
+    offsetY = myBall.offsetHeight / 2;
+
+  //Build the keyframes string
+
+  myAnimation = "@keyframes moveIt {";
+  for (var i = 0; i < points.length; i = i + 2) {
+    myAnimation += percent + "%{ transform:translate(" + (points[i] - offsetX) + "px," + (points[i + 1] - offsetY) + "px)}";
+    percent = percent + step;
+  };
+  myAnimation += "}";
+
+  // Check the switches
+
+  var dur = document.getElementById("duration").value;
+  var osc = "";
+  if (alt.checked === true) {
+    osc = "alternate";
+  };
+  var anim = "moveIt " + dur + "s infinite " + osc + " " + myEase.value;
+
+  //kick it out to the visible box
+  myText.innerHTML =
+    "<p><b>Add to your element's CSS:</b> <br>" + anim + "</p><p>-----------------------------</p> <br>" +
+    //myAnimation.replace("{", "}<br>");
+    myAnimation.replace(/\)}/g, ")}<br>").replace("{", "{<br>");
+
+  //add it to the stylesheet 
+  ss.insertRule(myAnimation);
+
+  //console.log(offsetX,offsetY);
+  // add the animation to the ball
+  myBall.style.animation = anim;
+  //disable the Make Animation button.
+  makeAnimButton.disabled = true;
+  clearButton.disabled = false;
+
+  // console.log(ss.rules);
+}
+	
+</script>
+</body>
+</html>
